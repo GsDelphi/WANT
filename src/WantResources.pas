@@ -1,8 +1,8 @@
 (****************************************************************************
  * WANT - A Pascal-Friendly Build Tool.                                     *
- * Copyright (C) 2001-2003  Juancarlo Añez                                  *
+ * Copyright (C) 2001-2003  Juancarlo Anez, Caracas, Venezuela              *
  * Copyright (C) 2008-2013  Alexey Shumkin aka Zapped                       *
- * Copyright (C) 2017       Simon Gilli                                     *
+ * Copyright (C) 2017       Simon Gilli, Gilbertsoft, Switzerland           *
  *                                                                          *
  * This program is free software: you can redistribute it and/or modify     *
  * it under the terms of the GNU General Public License as published by     *
@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.    *
  ****************************************************************************)
 {
-  @abstract Delphi project file for WANT
+  @abstract WANT resources and constants
 
   @author Juancarlo Añez
   @author Simon Gilli (http://want.gilbertsoft.org)
@@ -28,73 +28,79 @@ unit WantResources;
 interface
 
 uses
+  Windows,
   Classes,
   SysUtils,
   JclSysUtils,
   JclFileUtils,
-
-  uConsole,
-  uFileVersion,
-
-  WildPaths;
+  JclStrings;
+//  uConsole,
+//  uFileVersion;
+//  WildPaths;
 
 const
-  SwitchChars           = ['-', '/'];
-
-  C_EOL = #13#10;
-
-  USAGE_TEXT = 'USAGE_TEXT';
+  SwitchChars = ['-', '/'];
 
 resourcestring
-  F_WantStartupFailed        = 'Want startup failed';
+  F_WantStartupFailed = 'Want startup failed';
 
-  F_WantError                = '!!! %s !!!';
-  F_TaskError                 = '!!! %s !!!';
-  F_TaskFailure               = '%s';
+  F_WantError   = '!!! %s !!!';
+  F_TaskError   = '!!! %s !!!';
+  F_TaskFailure = '%s';
 
-  F_BuildStartMsg             = 'buildfile: %s';
-  F_BuildDoneMsg              = 'Build complete.';
-  F_BuildDoneMsgAnt           = 'BUILD SUCCESSFUL';
-  F_BuildFailedMsg            = 'BUILD FAILED';
+  F_BuildStartMsg   = 'buildfile: %s';
+  F_BuildDoneMsg    = 'Build complete.';
+  F_BuildDoneMsgAnt = 'BUILD SUCCESSFUL';
+  F_BuildFailedMsg  = 'BUILD FAILED';
 
   F_BuildFileNotFound         = 'Cannot find %s';
   F_BuildTargetUnhandledError = '%s: %s';
   F_BuildTargetNotFound       = 'target [%s] not found';
 
-  F_TargetStartMsg            = '--> %s';
+  F_TargetStartMsg = '--> %s';
 
-  F_ExpectedTagError          = 'expected <%s>';
-  F_ParseError                = '(%d): %s';
-  F_ParseAttributeError       = '(%d): Unknown attribute %s.%s';
-  F_ParseChildError           = '(%d): Unknown element <%s><%s>';
-  F_ParseChildTextError       = '(%d): Element <%s> does not accept text';
+  F_ExpectedTagError    = 'expected <%s>';
+  F_ParseError          = '(%d): %s';
+  F_ParseAttributeError = '(%d): Unknown attribute %s.%s';
+  F_ParseChildError     = '(%d): Unknown element <%s><%s>';
+  F_ParseChildTextError = '(%d): Element <%s> does not accept text';
 
-  F_WantClassNotFound        = 'Want class <%s> not found';
-  F_DuplicateWantClass       = 'Duplicate Want tag <%s> in class <%s>';
+  F_WantClassNotFound  = 'Want class <%s> not found';
+  F_DuplicateWantClass = 'Duplicate Want tag <%s> in class <%s>';
 
 
-function ConvertToBoolean(const aValue: String): Boolean;
+function ConvertToBoolean(const AValue: string): boolean;
 
-function  Copyright: string;
-function  License :string;
+function Copyright: string;
+function License: string;
 procedure Usage;
-function  GetVersionString: string;
-function  GetStringResource(Name :string):string;
 
-var
-  WantVersion: string;
+function GetResourceString(const ResName: string; ResType: PChar = RT_RCDATA): string;
+
+function WantVersion: string;
 
 implementation
 
 {$R usage.res}
 {$R license.res}
 
-uses
-  Windows;
+const
+  C_EOL = AnsiLineBreak;
 
-function ConvertToBoolean(const aValue: String): Boolean;
+  LICENSE_TEXT = 'LICENSE';
+  USAGE_TEXT = 'USAGE';
+
 var
-  s: String;
+  LWantVersion: string;
+
+function WantVersion: string;
+begin
+  Result := LWantVersion;
+end;
+
+function ConvertToBoolean(const AValue: string): boolean;
+var
+  s: string;
 begin
   s := LowerCase(Trim(aValue)) + ' ';
 
@@ -107,68 +113,42 @@ begin
   end;
 end;
 
-function GetVersionString: string;
-begin
-  try
-    Result := GetModuleVersion;
-  except
-    Result := '?.?.?.?';
-  end;
-end;
-
-
-function GetStringResource(Name :string):string;
+function GetResourceString(const ResName: string; ResType: PChar): string;
 var
-  FindHandle: THandle;
-  ResHandle: THandle;
-  ResPtr: Pointer;
-
-  procedure RaiseError(ErrorTxt: string);
-  begin
-    raise Exception.Create('Internal error: ' + ErrorTxt + ' ' +
-      '[WantBase.License]');
-  end;
+  Res: TResourceStream;
+  Str: TStringStream;
 begin
-  FindHandle := FindResource(HInstance, PChar(Name), 'TEXT');
-  if FindHandle <> 0 then
-  begin
-    ResHandle := LoadResource(HInstance, FindHandle);
+  Res := TResourceStream.Create(HInstance, ResName, ResType);
+  try
+    Str := TStringStream.Create('');
     try
-      if ResHandle <> 0 then
-      begin
-        ResPtr := LockResource(ResHandle);
-        try
-          if ResPtr <> Nil then
-            Result := PChar(ResPtr)
-          else
-            RaiseError('LockResource failed');
-        finally
-          UnlockResource(ResHandle);
-        end;
-      end
-      else
-        RaiseError('LoadResource failed');
-   finally
-     FreeResource(FindHandle);
-   end;
-  end
-  else
-    RaiseError('FindResource failed');
+      Res.SaveToStream(Str);
+      Result := Str.DataString;
+    finally
+      Str.Free;
+    end;
+  finally
+    Res.Free;
+  end;
 end;
 
 function Copyright: string;
 begin
   Result :=
-   'WANT - A Build Management tool. v' + WantVersion         + C_EOL +
-   'Copyright (c) 2001-2003 Juancarlo Anez, Caracas, Venezuela.'  + C_EOL +
-   'Copyright (c) 2008-2013 Alexey Shumkin aka Zapped'  + C_EOL +
-   'All rights reserved'                                          + C_EOL;
+    'WANT - A Pascal-Friendly Build Tool - Version ' + WantVersion + C_EOL +
+    'Copyright (C) 2001-2003  Juancarlo Anez, Caracas, Venezuela' + C_EOL +
+    'Copyright (C) 2008-2013  Alexey Shumkin aka Zapped' + C_EOL +
+    'Copyright (C) 2017       Simon Gilli, Gilbertsoft, Switzerland' + C_EOL +
+    C_EOL +
+    'This program comes with ABSOLUTELY NO WARRANTY; for details type ''show w''.' + C_EOL +
+    'This is free software, and you are welcome to redistribute it' + C_EOL +
+    'under certain conditions; type ''show c'' for details.' + C_EOL;
 end;
 
-function License :string;
+function License: string;
 begin
   try
-    Result := GetStringResource('LICENSE');
+    Result := GetResourceString(LICENSE_TEXT);
   except
     Result := Copyright;
   end;
@@ -180,6 +160,7 @@ begin
 end;
 
 initialization
-  WantVersion := GetVersionString;
+  LWantVersion := VersionFixedFileInfoString(GetModuleName(HInstance), vfFull, '?.?.?.?');;
 
 end.
+
