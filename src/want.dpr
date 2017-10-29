@@ -88,8 +88,6 @@ uses
   ZipTasks in 'tasks\ZipTasks.pas';
 
 {$R wantver.res}
-{$R usage.res}
-{$R license.res}
 
 begin
   Run;
