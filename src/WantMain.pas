@@ -45,9 +45,14 @@ begin
     try
       Runner.Execute;
     finally
-      FreeAndNil(Runner);
+      Runner.Free;
     end;
   except
+    on E: EAbort do
+    begin
+      ExitCode := 0;
+      Exit;
+    end;
     on E: EWantException do
     begin
       ExitCode := 1;

@@ -1,28 +1,28 @@
 (****************************************************************************
- * WANT - A build management tool.                                          *
- * Copyright (c) 2001-2003 Juancarlo Anez, Caracas, Venezuela.              *
- * All rights reserved.                                                     *
+ * WANT - A Pascal-Friendly Build Tool.                                     *
+ * Copyright (C) 2001-2003  Juancarlo Anez, Caracas, Venezuela              *
+ * Copyright (C) 2008-2013  Alexey Shumkin aka Zapped                       *
+ * Copyright (C) 2017       Simon Gilli, Gilbertsoft, Switzerland           *
  *                                                                          *
- * This library is free software; you can redistribute it and/or            *
- * modify it under the terms of the GNU Lesser General Public               *
- * License as published by the Free Software Foundation; either             *
- * version 2.1 of the License, or (at your option) any later version.       *
+ * This program is free software: you can redistribute it and/or modify     *
+ * it under the terms of the GNU General Public License as published by     *
+ * the Free Software Foundation, either version 3 of the License, or        *
+ * (at your option) any later version.                                      *
  *                                                                          *
- * This library is distributed in the hope that it will be useful,          *
+ * This program is distributed in the hope that it will be useful,          *
  * but WITHOUT ANY WARRANTY; without even the implied warranty of           *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU        *
- * Lesser General Public License for more details.                          *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            *
+ * GNU General Public License for more details.                             *
  *                                                                          *
- * You should have received a copy of the GNU Lesser General Public         *
- * License along with this library; if not, write to the Free Software      *
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA *
+ * You should have received a copy of the GNU General Public License        *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.    *
  ****************************************************************************)
 {
-    @brief 
+  @abstract Abstract script runner
 
-    @author Juancarlo Añez
+  @author Juancarlo Añez
+  @author Simon Gilli (http://want.gilbertsoft.org)
 }
-
 unit ScriptRunner;
 
 interface
@@ -30,58 +30,54 @@ interface
 uses
   SysUtils,
   Classes,
-
   JclFileUtils,
-
   JALStrings,
-
   WildPaths,
-
   WantUtils,
   WantClasses,
   BuildListeners,
   ScriptParser;
 
-
 type
   TScriptRunner = class
   protected
-    FListener    :TBuildListener;
-    FListenerCreated :boolean;
+    FListener:        TBuildListener;
+    FListenerCreated: boolean;
 
-    procedure DoCreateListener;  virtual;
-    procedure CreateListener;    virtual;
-    procedure SetListener(Value :TBuildListener);
+    procedure DoCreateListener; virtual;
+    procedure CreateListener; virtual;
+    procedure SetListener(Value: TBuildListener);
 
-    procedure BuildTarget(Target :TTarget);
-    procedure ExecuteTask(Task :TTask);
+    procedure BuildTarget(Target: TTarget);
+    procedure ExecuteTask(Task: TTask);
 
   public
     constructor Create;
-    destructor  Destroy; override;
+    destructor Destroy; override;
 
-    procedure LoadProject(Project :TProject; BuildFile: TPath; SearchUp :boolean = false);
+    procedure LoadProject(Project: TProject; BuildFile: TPath;
+      SearchUp: boolean = False);
 
-    procedure BuildProject(Project :TProject; Target: string = '');   overload;
-    procedure BuildProject(Project :TProject; Targets: TStringArray); overload;
+    procedure BuildProject(Project: TProject; Target: string = ''); overload;
+    procedure BuildProject(Project: TProject; Targets: TStringArray); overload;
 
-    procedure Build(BuildFile: TPath; Targets :TStringArray; Level :TLogLevel = vlNormal); overload;
-    procedure Build(BuildFile: TPath; Target  :string;       Level :TLogLevel = vlNormal); overload;
-    procedure Build(BuildFile: TPath; Level   :TLogLevel = vlNormal); overload;
+    procedure Build(BuildFile: TPath; Targets: TStringArray;
+      Level: TLogLevel = vlNormal); overload;
+    procedure Build(BuildFile: TPath; Target: string; Level: TLogLevel = vlNormal);
+      overload;
+    procedure Build(BuildFile: TPath; Level: TLogLevel = vlNormal); overload;
 
     procedure Log(Level: TLogLevel; Msg: string);
 
     class function DefaultBuildFileName: TPath;
-    function FindBuildFile(BuildFile: TPath; SearchUp :boolean = False):TPath; overload;
-    function FindBuildFile(SearchUp :boolean= False) :TPath; overload;
+    function FindBuildFile(BuildFile: TPath; SearchUp: boolean = False): TPath; overload;
+    function FindBuildFile(SearchUp: boolean = False): TPath; overload;
 
-    property Listener :TBuildListener read FListener write SetListener;
-    property ListenerCreated :boolean read FListenerCreated;
+    property Listener: TBuildListener Read FListener Write SetListener;
+    property ListenerCreated: boolean Read FListenerCreated;
   end;
 
 implementation
-
-
 
 { TScriptRunner }
 
@@ -94,14 +90,15 @@ end;
 destructor TScriptRunner.Destroy;
 begin
   if ListenerCreated then
-  begin
-    FListener.BuildFinished;
-    FreeAndNil(FListener);
-  end;
+    FListener.Free
+  else
+    FListener := nil;
+
   inherited Destroy;
 end;
 
-procedure TScriptRunner.LoadProject(Project :TProject; BuildFile: TPath; SearchUp :boolean);
+procedure TScriptRunner.LoadProject(Project: TProject; BuildFile: TPath;
+  SearchUp: boolean);
 begin
   if not IsLocalPath(BuildFile) then
     BuildFile := ToPath(BuildFile);
@@ -111,19 +108,18 @@ begin
     TScriptParser.Parse(Project, BuildFile);
     Listener.BuildFileLoaded(Project, WildPaths.ToRelativePath(BuildFile, CurrentDir));
   except
-    on e :Exception do
+    on E: Exception do
     begin
-      Listener.BuildFailed(Project, e.Message);
+      Listener.BuildFailed(Project, E.Message);
       raise;
     end;
   end;
 end;
 
-procedure TScriptRunner.Build( BuildFile: TPath;
-                               Targets:    TStringArray;
-                               Level:      TLogLevel = vlNormal);
+procedure TScriptRunner.Build(BuildFile: TPath; Targets: TStringArray;
+  Level: TLogLevel = vlNormal);
 var
-  Project :TProject;
+  Project: TProject;
 begin
   Listener.Level := Level;
   Project := TProject.Create;
@@ -133,15 +129,15 @@ begin
       LoadProject(Project, BuildFile);
       BuildProject(Project, Targets);
     except
-      on e :EWantException do
+      on E: EWantException do
       begin
-        Log(vlDebug, e.Message);
+        Log(vlDebug, E.Message);
         raise;
       end;
-      on e :Exception do
+      on E: Exception do
       begin
-        Log(vlDebug, e.Message);
-        Listener.BuildFailed(Project, e.Message);
+        Log(vlDebug, E.Message);
+        Listener.BuildFailed(Project, E.Message);
         raise;
       end;
     end;
@@ -150,19 +146,18 @@ begin
   end;
 end;
 
-
 procedure TScriptRunner.DoCreateListener;
 begin
   if Listener = nil then
   begin
     CreateListener;
-    FListenerCreated := True;
   end;
 end;
 
 procedure TScriptRunner.CreateListener;
 begin
   FListener := TBasicListener.Create;
+  FListenerCreated := True;
 end;
 
 procedure TScriptRunner.Build(BuildFile: TPath; Level: TLogLevel);
@@ -172,13 +167,12 @@ end;
 
 procedure TScriptRunner.Build(BuildFile: TPath; Target: string; Level: TLogLevel);
 var
-  T :TStringArray;
+  T: TStringArray;
 begin
   SetLength(T, 1);
   T[0] := Target;
   Build(BuildFile, T, Level);
 end;
-
 
 procedure TScriptRunner.BuildProject(Project: TProject; Target: string);
 begin
@@ -190,8 +184,8 @@ end;
 
 procedure TScriptRunner.BuildProject(Project: TProject; Targets: TStringArray);
 var
-  i:       Integer;
-  Sched:   TTargetArray;
+  i: integer;
+  Sched: TTargetArray;
   LastDir: TPath;
 begin
   Sched := nil;
@@ -202,10 +196,10 @@ begin
       Project.Listener := Listener;
 
       Project.Configure;
-      
-      Log(vlDebug, Format('rootdir="%s"',   [Project.RootPath]));
-      Log(vlDebug, Format('basedir="%s"',   [Project.BaseDir]));
-      Log(vlDebug, Format('basepath="%s"',  [Project.BasePath]));
+
+      Log(vlDebug, Format('rootdir="%s"', [Project.RootPath]));
+      Log(vlDebug, Format('basedir="%s"', [Project.BaseDir]));
+      Log(vlDebug, Format('basepath="%s"', [Project.BasePath]));
 
 
       if Length(Targets) = 0 then
@@ -216,13 +210,13 @@ begin
           raise ENoDefaultTargetError.Create('No default target');
       end;
     except
-      on e :Exception do
+      on E: Exception do
       begin
-        Log(vlDebug, e.Message);
-        if e is ETaskException then
+        Log(vlDebug, E.Message);
+        if E is ETaskException then
           Listener.BuildFailed(Project)
         else
-          Listener.BuildFailed(Project, e.Message);
+          Listener.BuildFailed(Project, E.Message);
         raise;
       end;
     end;
@@ -238,21 +232,21 @@ begin
         try
           for i := Low(Sched) to High(Sched) do
           begin
-              ChangeDir(Project.BasePath);
-              BuildTarget(Sched[i]);
+            ChangeDir(Project.BasePath);
+            BuildTarget(Sched[i]);
           end;
         finally
           ChangeDir(LastDir);
         end;
       end;
     except
-      on e :Exception do
+      on E: Exception do
       begin
-        Log(vlDebug, e.Message);
-        if e is ETaskException then
+        Log(vlDebug, E.Message);
+        if E is ETaskException then
           Listener.BuildFailed(Project)
         else
-          Listener.BuildFailed(Project, e.Message);
+          Listener.BuildFailed(Project, E.Message);
         raise;
       end;
     end;
@@ -264,22 +258,22 @@ end;
 
 procedure TScriptRunner.BuildTarget(Target: TTarget);
 var
-  i :Integer;
-  p :Integer;
-  LastDir :TPath;
-  PathList, PL :TPaths;
+  i: integer;
+  p: integer;
+  LastDir: TPath;
+  PathList, PL: TPaths;
 begin
   if not Target.Enabled then
     EXIT;
 
   Listener.TargetStarted(Target);
 
-  Log(vlDebug, Format('basedir="%s"',   [Target.BaseDir]));
-  Log(vlDebug, Format('basepath="%s"',  [Target.BasePath]));
+  Log(vlDebug, Format('basedir="%s"', [Target.BaseDir]));
+  Log(vlDebug, Format('basepath="%s"', [Target.BasePath]));
 
   LastDir := CurrentDir;
   try
-    Target.Configure(false);
+    Target.Configure(False);
     ChangeDir(Target.BasePath);
 
     if Target.ForEachList then
@@ -298,9 +292,10 @@ begin
 
     for p := Low(PathList) to High(PathList) do
     begin
-      Target.SetProperty(Target._Property, PathList[p], true);
-      Log(vlDebug, Format('foreach.property_value="%s"', [Target.PropertyValue(Target._Property)]));
-      for i := 0 to Target.TaskCount-1 do
+      Target.SetProperty(Target._Property, PathList[p], True);
+      Log(vlDebug, Format('foreach.property_value="%s"',
+        [Target.PropertyValue(Target._Property)]));
+      for i := 0 to Target.TaskCount - 1 do
         ExecuteTask(Target.Tasks[i]);
       Target.SetProperty(Target._Property, '');
     end;
@@ -311,7 +306,6 @@ begin
   end;
 end;
 
-
 procedure TScriptRunner.ExecuteTask(Task: TTask);
 begin
   if not Task.Enabled then
@@ -321,31 +315,30 @@ begin
   end;
   Listener.TaskStarted(Task);
 
-  Log(vlDebug, Format('basedir="%s"',   [Task.BaseDir]));
-  Log(vlDebug, Format('basepath="%s"',  [Task.BasePath]));
+  Log(vlDebug, Format('basedir="%s"', [Task.BaseDir]));
+  Log(vlDebug, Format('basepath="%s"', [Task.BasePath]));
 
   try
     Task.DoExecute;
     Listener.TaskFinished(Task);
   except
-    on e: Exception do
+    on E: Exception do
     begin
-      Log(vlDebug, 'caught: ' + e.Message);
-      if e is EWantException then
+      Log(vlDebug, 'caught: ' + E.Message);
+      if E is EWantException then
       begin
-        Listener.TaskFailed(Task, e.Message);
-        raise
+        Listener.TaskFailed(Task, E.Message);
+        raise;
       end
       else
       begin
-        Log(vlErrors, e.Message);
-        Listener.TaskFailed(Task, e.Message);
-        raise ETaskError.Create(e.Message);
+        Log(vlErrors, E.Message);
+        Listener.TaskFailed(Task, E.Message);
+        raise ETaskError.Create(E.Message);
       end;
     end;
   end;
 end;
-
 
 procedure TScriptRunner.Log(Level: TLogLevel; Msg: string);
 begin
@@ -357,11 +350,11 @@ procedure TScriptRunner.SetListener(Value: TBuildListener);
 begin
   if FListener <> Value then
   begin
-    if FListenerCreated then
+    if ListenerCreated then
     begin
-      FListener.Free;
-      FListener := nil;
+      FreeAndNil(FListener);
     end;
+
     FListenerCreated := False;
     FListener := Value;
   end;
@@ -369,10 +362,10 @@ end;
 
 class function TScriptRunner.DefaultBuildFileName: TPath;
 var
-  AppName :string;
+  AppName: string;
 begin
   AppName := ExtractFileName(GetModulePath(hInstance));
-  Result  := ChangeFileExt(LowerCase(AppName),'.xml');
+  Result  := ChangeFileExt(LowerCase(AppName), '.xml');
 end;
 
 function TScriptRunner.FindBuildFile(BuildFile: TPath; SearchUp: boolean): TPath;
@@ -385,19 +378,16 @@ begin
   begin
     Log(vlDebug, Format('Finding buildfile %s', [BuildFile]));
     Result := PathConcat(CurrentDir, BuildFile);
-    Dir    := SuperPath(Result);
+    Dir := SuperPath(Result);
 
     Log(vlDebug, Format('Looking for "%s in "%s"', [BuildFile, Dir]));
-    while not PathIsFile(Result)
-      and SearchUp
-      and (Dir <> '')
-      and (Dir <> SuperPath(Dir))
-    do
+    while not PathIsFile(Result) and SearchUp and (Dir <> '') and
+      (Dir <> SuperPath(Dir)) do
     begin
       if PathIsDir(Dir) then
       begin
         Result := PathConcat(Dir, BuildFile);
-        Dir    := SuperPath(Dir);
+        Dir := SuperPath(Dir);
         Log(vlDebug, Format('Looking for "%s in "%s"', [BuildFile, Dir]));
       end
       else
@@ -409,17 +399,14 @@ begin
   end;
 end;
 
-
-
 function TScriptRunner.FindBuildFile(SearchUp: boolean): TPath;
 begin
   Result := FindBuildFile(DefaultBuildFileName, SearchUp);
   if not PathIsFile(Result) then
-     Result := FindBuildFile(AntBuildFileName, SearchUp);
+    Result := FindBuildFile(AntBuildFileName, SearchUp);
   if not PathIsFile(Result) then
-     Result := DefaultBuildFileName;
+    Result := DefaultBuildFileName;
 end;
 
 end.
-
 
