@@ -1,28 +1,28 @@
 (****************************************************************************
- * WANT - A build management tool.                                          *
- * Copyright (c) 2001-2003 Juancarlo Anez, Caracas, Venezuela.              *
- * All rights reserved.                                                     *
+ * WANT - A Pascal-Friendly Build Tool.                                     *
+ * Copyright (C) 2001-2003  Juancarlo Añez                                  *
+ * Copyright (C) 2008-2013  Alexey Shumkin aka Zapped                       *
+ * Copyright (C) 2017       Simon Gilli                                     *
  *                                                                          *
- * This library is free software; you can redistribute it and/or            *
- * modify it under the terms of the GNU Lesser General Public               *
- * License as published by the Free Software Foundation; either             *
- * version 2.1 of the License, or (at your option) any later version.       *
+ * This program is free software: you can redistribute it and/or modify     *
+ * it under the terms of the GNU General Public License as published by     *
+ * the Free Software Foundation, either version 3 of the License, or        *
+ * (at your option) any later version.                                      *
  *                                                                          *
- * This library is distributed in the hope that it will be useful,          *
+ * This program is distributed in the hope that it will be useful,          *
  * but WITHOUT ANY WARRANTY; without even the implied warranty of           *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU        *
- * Lesser General Public License for more details.                          *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            *
+ * GNU General Public License for more details.                             *
  *                                                                          *
- * You should have received a copy of the GNU Lesser General Public         *
- * License along with this library; if not, write to the Free Software      *
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA *
+ * You should have received a copy of the GNU General Public License        *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.    *
  ****************************************************************************)
 {
-    @brief 
+    @abstract Delphi project file for WANT
 
     @author Juancarlo Añez
+    @author Simon Gilli (http://want.gilbertsoft.org)
 }
-
 program want;
 
 {$R 'usage.res' 'usage.rc'}
@@ -32,6 +32,7 @@ uses
   ShareMem,
   SysUtils,
   SysConst,
+  WantMain in 'WantMain.pas',
   WIN32 in 'win32\WIN32.pas',
   CRT32 in 'win32\CRT32.pas',
   Win32Implementations in 'win32\Win32Implementations.pas',
@@ -77,35 +78,6 @@ uses
 
 {$r wantver.res}
 {$r license.res }
-
-const
-  SwitchChars = ['-', '/'];
-
-procedure Run;
-var
-  Runner  :TConsoleScriptRunner;
-begin
-  try
-    Runner := TConsoleScriptRunner.Create;
-    try
-      Runner.Execute;
-    finally
-      FreeAndNil(Runner);
-    end;
-  except
-    on e :EWantException do
-    begin
-      ExitCode := 1;
-      Exit;
-    end;
-    on e :Exception do
-    begin
-      Writeln(e.Message);
-      ExitCode := 2;
-      Exit;
-    end;
-  end;
-end;
 
 begin
   Run;
