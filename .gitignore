@@ -65,6 +65,11 @@ __recovery/
 # Castalia statistics file (since XE7 Castalia is distributed with Delphi)
 *.stat
 
-# Directories create by build task
-bin/
-dcu/
+# Directories created by build task
+/bin
+/dcu
+
+# Files created by build task
+/src/**/*.res
+/src/wantver.rc
+/test/**/*.res
