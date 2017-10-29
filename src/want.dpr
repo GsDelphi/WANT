@@ -18,15 +18,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.    *
  ****************************************************************************)
 {
-    @abstract Delphi project file for WANT
+  @abstract Delphi project file for WANT
 
-    @author Juancarlo Añez
-    @author Simon Gilli (http://want.gilbertsoft.org)
+  @author Juancarlo Añez
+  @author Simon Gilli (http://want.gilbertsoft.org)
 }
 program want;
 
-{$R 'usage.res' 'usage.rc'}
+{$APPTYPE CONSOLE}
 {%File 'usage.txt'}
+{%File '..\doc\license.txt'}
+{%File '..\doc\copyright.txt'}
 
 uses
   ShareMem,
@@ -85,10 +87,9 @@ uses
   XmlPropertyTasks in 'tasks\XmlPropertyTasks.pas',
   ZipTasks in 'tasks\ZipTasks.pas';
 
-{$APPTYPE CONSOLE}
-
-{$r wantver.res}
-{$r license.res }
+{$R wantver.res}
+{$R usage.res}
+{$R license.res}
 
 begin
   Run;
