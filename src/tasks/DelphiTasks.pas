@@ -362,6 +362,27 @@ type
   published
     property _file:  string read FFile   write FFile;
     property output: string read FOutput write FOutput;
+    { TODO : add more parameters see bellow }
+    {
+      Syntax: brcc32 [options ...] filename
+        options marked with a '*' are on by default
+
+        @<filename>        Take instructions from command file
+        -r                    (ignored for compatibility)
+        -16                   Build 16-bit Windows compatible .res file
+        -32                 * Build 32-bit Windows compatible .res file
+        -fofilename           Set output filename
+        -v                    Verbose
+        -ipath                Set include path
+        -dname[=string]       Define #define
+        -x                    Ignore INCLUDE environment variable
+        -m                    Enable multi-byte character support
+        -cdddd                set default code page to nnnn
+        -lxxxx                set default language to xxxx
+        -31   Provided for downward compatibility (build 16-bit .res file)
+        -w32  Provided for downward compatibility (build 16-bit .res file)
+        -? or -h              Display this message
+    }
   end;
 
   TGOResourceCompileTask = class(TResourceCompileTask)
