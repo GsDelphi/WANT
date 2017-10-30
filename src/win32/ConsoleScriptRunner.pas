@@ -128,14 +128,9 @@ begin
     if FBuildFile = '' then
       FBuildFile := FindBuildFile(True);
     LoadProject(Project, FBuildFile);
-
-    if ListenerCreated then
-      Listener.BuildStarted;
-
+    Listener.BuildStarted;
     BuildProject(Project, FTargets);
-
-    if ListenerCreated then
-      Listener.BuildFinished;
+    Listener.BuildFinished;
   finally
     FreeAndNil(Project);
   end;
