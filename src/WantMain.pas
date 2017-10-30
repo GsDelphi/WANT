@@ -2,7 +2,7 @@
  * WANT - A Pascal-Friendly Build Tool.                                     *
  * Copyright (C) 2001-2003  Juancarlo Añez                                  *
  * Copyright (C) 2008-2013  Alexey Shumkin aka Zapped                       *
- * Copyright (C) 2017       Simon Gilli                                     *
+ * Copyright (C) 2017       Simon Gilli, Gilbertsoft, Switzerland           *
  *                                                                          *
  * This program is free software: you can redistribute it and/or modify     *
  * it under the terms of the GNU General Public License as published by     *
