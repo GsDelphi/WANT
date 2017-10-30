@@ -34,9 +34,6 @@ uses
   JclSysUtils,
   JclFileUtils,
   JclStrings;
-//  uConsole,
-//  uFileVersion;
-//  WildPaths;
 
 const
   SwitchChars = ['-', '/'];
